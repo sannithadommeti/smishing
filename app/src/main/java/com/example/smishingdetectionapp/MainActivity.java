@@ -1,129 +1,54 @@
 package com.example.smishingdetectionapp;
 
-import android.annotation.SuppressLint;
-import android.content.Intent;
 import android.os.Bundle;
-import android.view.Menu;
-import android.widget.Button;
-import android.widget.TextView;
-import android.os.Handler;
-
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.core.app.NotificationManagerCompat;
-import androidx.navigation.NavController;
-import androidx.navigation.Navigation;
-import androidx.navigation.ui.AppBarConfiguration;
-import androidx.navigation.ui.NavigationUI;
-
-import com.example.smishingdetectionapp.databinding.ActivityMainBinding;
-import com.example.smishingdetectionapp.detections.DatabaseAccess;
-import com.example.smishingdetectionapp.detections.DetectionsActivity;
-import com.example.smishingdetectionapp.ui.login.LoginActivity;
-import com.example.smishingdetectionapp.riskmeter.RiskScannerTCActivity;
-
-
-
-import com.example.smishingdetectionapp.notifications.NotificationPermissionDialogFragment;
+import androidx.drawerlayout.widget.DrawerLayout;
+import androidx.fragment.app.Fragment;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
+import com.google.android.material.navigation.NavigationView;
+import android.view.MenuItem;
 
-public class MainActivity extends SharedActivity {
-    private AppBarConfiguration mAppBarConfiguration;
+public class MainActivity extends AppCompatActivity {
 
+    boolean isTablet;
 
-    @SuppressLint("SetTextI18n")
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        ActivityMainBinding binding = ActivityMainBinding.inflate(getLayoutInflater());
-        setContentView(binding.getRoot());
+        setContentView(R.layout.activity_main);
 
-        mAppBarConfiguration = new AppBarConfiguration.Builder(R.id.nav_home, R.id.nav_news, R.id.nav_settings)
-                .build();
+        isTablet = findViewById(R.id.drawer_layout) != null;
 
-        if (!areNotificationsEnabled()) {
-            showNotificationPermissionDialog();
+        if (isTablet) {
+            NavigationView navigationView = findViewById(R.id.navigation_view);
+            navigationView.setNavigationItemSelectedListener(item -> {
+                switchFragment(item.getItemId());
+                DrawerLayout drawer = findViewById(R.id.drawer_layout);
+                drawer.closeDrawers();
+                return true;
+            });
+        } else {
+            BottomNavigationView bottomNav = findViewById(R.id.bottom_navigation);
+            bottomNav.setOnItemSelectedListener(item -> {
+                switchFragment(item.getItemId());
+                return true;
+            });
         }
 
-        BottomNavigationView nav = findViewById(R.id.bottom_navigation);
-        nav.setSelectedItemId(R.id.nav_home);
-        nav.setOnItemSelectedListener(menuItem -> {
-            int id = menuItem.getItemId();
-            if (id == R.id.nav_home) {
-                return true;
-            } else if (id == R.id.nav_news) {
-                startActivity(new Intent(getApplicationContext(), NewsActivity.class));
-                overridePendingTransition(0, 0);
-                finish();
-                return true;
-            } else if (id == R.id.nav_settings) {
-                startActivity(new Intent(getApplicationContext(), SettingsActivity.class));
-                overridePendingTransition(0, 0);
-                finish();
-                return true;
-            }
-            return false;
-        });
-
-        Button debug_btn = findViewById(R.id.debug_btn);
-        debug_btn.setOnClickListener(v ->
-                startActivity(new Intent(MainActivity.this, DebugActivity.class)));
-
-        Button detections_btn = findViewById(R.id.detections_btn);
-        detections_btn.setOnClickListener(v -> {
-            startActivity(new Intent(this, DetectionsActivity.class));
-            finish();
-        });
-
-        Button learnMoreButton = findViewById(R.id.learn_more_btn);
-        learnMoreButton.setOnClickListener(v -> {
-            Intent intent = new Intent(MainActivity.this, EducationActivity.class);
-            startActivity(intent);
-        });
-        Button scanner_btn = findViewById(R.id.scanner_btn);
-        scanner_btn.setOnClickListener(v -> {
-            startActivity(new Intent(this, RiskScannerTCActivity.class));
-            finish();
-        });
-
-
-        // Database connection
-        DatabaseAccess databaseAccess = DatabaseAccess.getInstance(getApplicationContext());
-        databaseAccess.open();
-        //setting counter from result
-        TextView total_count;
-        total_count = findViewById(R.id.total_counter);
-        total_count.setText(""+databaseAccess.getCounter());
-        //closing the connection
-        //databaseAccess.close();
-        //TODO: Add functionality for new detections.
-
-        // Setting counter from the result
-        //TextView total_count = findViewById(R.id.total_counter);
-        //total_count.setText("" + databaseAccess.getCounter());
-
-        // Closing the connection
-        databaseAccess.close();
-
+        switchFragment(R.id.nav_home);
     }
 
-    private boolean areNotificationsEnabled() {
-        return NotificationManagerCompat.from(this).areNotificationsEnabled();
-    }
+    private void switchFragment(int itemId) {
+        Fragment fragment;
+        if (itemId == R.id.nav_settings) {
+            fragment = new SettingsFragment();
+        } else {
+            fragment = new HomeFragment();
+        }
 
-    private void showNotificationPermissionDialog() {
-        NotificationPermissionDialogFragment dialogFragment = new NotificationPermissionDialogFragment();
-        dialogFragment.show(getSupportFragmentManager(), "notificationPermission");
-    }
-
-    @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        getMenuInflater().inflate(R.menu.main, menu);
-        return true;
-    }
-
-    @Override
-    public boolean onSupportNavigateUp() {
-        NavController navController = Navigation.findNavController(this, R.id.nav_host_fragment_content_main);
-        return NavigationUI.navigateUp(navController, mAppBarConfiguration) || super.onSupportNavigateUp();
+        getSupportFragmentManager().beginTransaction()
+                .replace(R.id.fragment_container, fragment)
+                .commit();
     }
 }

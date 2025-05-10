@@ -97,11 +97,6 @@ public class SettingsActivity extends AppCompatActivity {
             startActivity(intent);
         });
 
-        Button chatAssistantBtn = findViewById(R.id.chatAssistantBtn);
-        chatAssistantBtn.setOnClickListener(v -> {
-            Intent intent = new Intent(SettingsActivity.this, ChatAssistantActivity.class);
-            startActivity(intent);
-        });
 
         //Feedback Button to switch to Feedback page
         Button feedbackBtn = findViewById(R.id.feedbackBtn);
